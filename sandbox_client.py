@@ -2,6 +2,7 @@ import socket
 import tarfile
 import io
 import json
+import sys
 
 class Sandbox(object):
     def __init__(self, path):
@@ -21,7 +22,7 @@ class Sandbox(object):
         self.sock.shutdown(socket.SHUT_WR)
 
 if __name__ == '__main__':
-    box = Sandbox('sock')
+    box = Sandbox(sys.argv[1] if sys.argv[1:] else 'sock')
     box.tar.add('example.sh', arcname='init')
     box.timeout = 3
     box.start()
