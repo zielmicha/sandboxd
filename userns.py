@@ -6,6 +6,7 @@ import threading
 import subprocess
 import socket
 import signal
+import traceback
 from subprocess import check_call, call
 
 binds = ['/usr', '/bin', '/sbin',
@@ -54,13 +55,17 @@ class UserNS(object):
         self.child_pid = os.fork()
         # fork_unshare_pid is not thread safe, so we need to fork
         if self.child_pid == 0:
-            _kill_on_parent_exit()
-            self.setup_fds()
-            self._close_fds([0, 1, 2, self._pid_pipe[1]])
-            os.setsid()
-            errwrap('unshare_net')
-            self._stage1()
-            os._exit(0)
+            try:
+                _kill_on_parent_exit()
+                self.setup_fds()
+                self._close_fds([0, 1, 2, self._pid_pipe[1]])
+                os.setsid()
+                errwrap('unshare_net')
+                self._stage1()
+            except:
+                traceback.print_exc()
+            finally:
+                os._exit(0)
         else:
             self._read_pid()
             os.wait()
@@ -84,12 +89,16 @@ class UserNS(object):
         if child_pid == 0:
             # we are init in this namespace, so our death
             # should kill all children, thought it's not sure if it happens
-            _kill_on_parent_exit()
-            errwrap('unshare_ipc')
-            errwrap('unshare_uts')
-            errwrap('unshare_mount')
-            self._stage2()
-            os._exit(0)
+            try:
+                _kill_on_parent_exit()
+                errwrap('unshare_ipc')
+                errwrap('unshare_uts')
+                errwrap('unshare_mount')
+                self._stage2()
+            except:
+                traceback.print_exc()
+            finally:
+                os._exit(0)
         else:
             self._write_pid(child_pid)
             try:
