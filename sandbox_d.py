@@ -14,6 +14,7 @@ class ThreadingUnixServer(SocketServer.ThreadingMixIn, SocketServer.UnixStreamSe
         if os.path.exists(self.server_address):
             os.remove(self.server_address)
         SocketServer.UnixStreamServer.server_bind(self)
+        os.chmod(self.server_address, 0o777)
 
 class Handler(SocketServer.StreamRequestHandler):
     def handle(self):
