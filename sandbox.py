@@ -5,15 +5,19 @@ import os
 import signal
 
 class Sandbox(userns.UserNS):
-    def __init__(self, tardata, timeout=None, uid=999, gid=999):
+    def __init__(self, tardata, timeout=None, uid=999, gid=999,
+                 setup_fds_fn=None):
         self.tardata = tardata
         self.timeout = timeout
+        self.setup_fds_fn = setup_fds_fn
         super(Sandbox, self).__init__(uid, gid)
 
     def setup_fds(self):
         if self.timeout is not None:
             signal.signal(signal.SIGALRM, self.timed_out)
             signal.alarm(self.timeout)
+        if self.setup_fds_fn:
+            self.setup_fds_fn()
 
     def timed_out(self, *signal_args):
         self.kill()
