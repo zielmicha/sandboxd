@@ -146,12 +146,21 @@ class UserNS(object):
 
         mount('-t', 'proc', 'procfs', target=self.dir + '/proc')
 
+        dev_null = open('/dev/null', 'w')
         os.mkdir(self.dir + '/dev')
         for dev in ['null', 'zero', 'tty', 'urandom']:
-            check_call(['cp', '-a', '/dev/' + dev, self.dir + '/dev/' + dev])
+             try:
+                 check_call(['cp', '-a', '/dev/' + dev, self.dir + '/dev/' + dev], stderr=dev_null)
+             except subprocess.CalledProcessError:
+                 # doesn't require CAP_SYS_ADMIN
+                 check_call(['touch', self.dir + '/dev/' + dev])
+                 check_call(['mount', '--bind', '/dev/' + dev, self.dir + '/dev/' + dev])
 
-        mount('-t', 'devpts', 'devptsfs', target=self.dir + '/dev/pts')
-        check_call(['cp', '-a', '/dev/pts/ptmx', self.dir + '/dev/ptmx'])
+        mount('--bind', '/dev/pts', target=self.dir + '/dev/pts')
+        try:
+             check_call(['cp', '-a', '/dev/pts/ptmx', self.dir + '/dev/ptmx'], stderr=dev_null)
+        except subprocess.CalledProcessError:
+             check_call(['ln', '-s', '/dev/pts/ptmx', self.dir + '/dev/ptmx'])
         check_call(['chmod', '666', '/dev/pts/ptmx', self.dir + '/dev/ptmx'])
 
         os.makedirs(self.dir + '/home/user')
