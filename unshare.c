@@ -30,12 +30,12 @@ int fork_unshare_pid() {
   if (setjmp(unshare_buf) != 0) {
     return 0;
   } else {
-    pid_t pid;
+    pid_t pid = 1;
     int result = clone(child_func,
                        child_stack + STACK_SIZE,
-                       CLONE_NEWPID | SIGCHLD, &pid);
+                       CLONE_NEWPID | CLONE_PARENT_SETTID | SIGCHLD, NULL, &pid);
     if(result >= 0)
-      return pid;
+      return (int)pid;
     else
       return result;
   }
