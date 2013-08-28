@@ -9,7 +9,12 @@ spawned processes are dead after main finishes (using PID NS).
 sandboxd listens on Unix socket:
 
 ```
-(as root) python sandbox_d.py /path_to_listen_on
+# run these commands as as root
+# not needed, but helps preventing collisions
+groupadd --gid 999 sandboxd
+useradd --uid 999 --gid sandboxd sandboxd
+# start server
+python sandbox_d.py /path_to_listen_on
 ```
 
 Make sure to set appropriate unix permissions on socket, so unauthorized users won't be able
@@ -18,7 +23,7 @@ to access sandbox.
 Protocol
 ------------------
 
-sandboxd expected that first line in the incoming connection will contain JSON encoded options.
+sandboxd expects that first line in the incoming connection will contain JSON encoded options.
 Currently the only supported option is `timeout` - after process runs for `timeout` seconds it
 will be killed with SIGKILL.
 
