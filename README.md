@@ -27,7 +27,7 @@ will be killed with SIGKILL.
 ```
 
 After newline character, TAR archive data should follow. This archive will be unpacked to
-directory `/home/user` (in chroot, won't affect host filesystem). Then /home/user/init will
+directory `/home/user` (in chroot, won't affect host filesystem). Then `/home/user/init` will
 be run, with stdout and stderr redirected to socket.
 
 Example
@@ -36,7 +36,7 @@ Example
 ```
 import sandbox_client
 
-box = sandbox_client.Sandbox()
+box = sandbox_client.Sandbox('/path_to_connect_to')
 box.tar.add('example.sh', arcname='init')
 box.timeout = 3
 box.start()
