@@ -38,18 +38,15 @@ class UserNS(object):
         if not (uid > 50):
             raise ValueError('uid must be > 50')
 
+        self._init_pid = None
         self.uid = uid
         self.gid = gid
-
-        self.running = False
-        # acquired when
-        self.lock = threading.Lock()
 
     def run(self):
         try:
             self._stage0()
         finally:
-            print 'run finished'
+            self._cleanup()
 
     def _stage0(self):
         self._setup_dir()
@@ -58,6 +55,7 @@ class UserNS(object):
         # fork_unshare_pid is not thread safe, so we need to fork
         if self.child_pid == 0:
             _kill_on_parent_exit()
+            self.setup_fds()
             self._close_fds([0, 1, 2, self._pid_pipe[1]])
             os.setsid()
             errwrap('unshare_net')
@@ -67,6 +65,9 @@ class UserNS(object):
             self._read_pid()
             os.wait()
 
+    def setup_fds(self):
+        pass
+
     def _init_pid_pipe(self):
         a, b = os.pipe()
         self._pid_pipe = a, b
@@ -75,6 +76,7 @@ class UserNS(object):
         self._init_pid, = struct.unpack('!I', os.read(self._pid_pipe[0], 4))
 
     def _write_pid(self, pid):
+        self._init_pid = pid
         os.write(self._pid_pipe[1], struct.pack('!I', pid))
 
     def _stage1(self):
@@ -90,8 +92,16 @@ class UserNS(object):
             os._exit(0)
         else:
             self._write_pid(child_pid)
-            os.wait()
+            try:
+                os.wait()
+            except OSError:
+                pass
         self._cleanup()
+
+    def kill(self):
+        if self._init_pid:
+            os.kill(self._init_pid, signal.SIGKILL)
+            self._cleanup()
 
     def _cleanup(self):
         try:
@@ -101,7 +111,6 @@ class UserNS(object):
 
     def _setup_dir(self):
         self.dir = tempfile.mkdtemp()
-        print 'directory', self.dir
 
     def _stage2(self):
         self._setup_fs()
