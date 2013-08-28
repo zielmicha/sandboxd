@@ -127,6 +127,7 @@ class UserNS(object):
         self._setup_env()
         os.chroot(self.dir)
         os.chdir('/')
+        os.setgroups([])
         os.setgid(self.gid)
         os.setuid(self.uid)
         self.user_code()

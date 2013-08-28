@@ -23,10 +23,17 @@ class Sandbox(userns.UserNS):
         self.kill()
 
     def user_code(self):
+        self.check_assumptions()
         os.chdir('/home/user')
         file = tarfile.open(fileobj=io.BytesIO(self.tardata))
         file.extractall()
         os.execv('./init', ['./init'])
+
+    def check_assumptions(self):
+        assert os.getpid() == 1
+        assert os.getuid() == 999
+        assert os.getgid() == 999
+        assert os.getgroups() == []
 
 if __name__ == '__main__':
     out = io.BytesIO()
