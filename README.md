@@ -1,9 +1,8 @@
-
 sandboxd
 ==================
 
 sandboxd uses Linux namespaces to create sandboxes for executing code.
-Unlike it supports all systems calls and spawning new processes - and makes sure that
+Unlike most sandboxes, it supports all systems calls and spawning new processes - and makes sure that
 spawned processes are dead after main finishes (using PID NS).
 
 sandboxd listens on Unix socket:
