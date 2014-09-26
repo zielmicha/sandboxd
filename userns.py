@@ -10,7 +10,8 @@ import traceback
 from subprocess import check_call, call
 
 binds = ['/usr', '/bin', '/sbin',
-         '/lib', '/lib32', '/lib32', '/lib64']
+         '/lib', '/lib32', '/lib32', '/lib64',
+         '/opt']
 
 _unshare = _libc = None
 
