@@ -28,6 +28,7 @@ class Handler(SocketServer.StreamRequestHandler):
 
         inst = sandbox.Sandbox(tardata,
                                timeout=options.get('timeout'),
+                               allow_network=options.get('allow_network', False),
                                setup_fds_fn=setup_fds_fn)
         inst.run()
 

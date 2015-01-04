@@ -6,11 +6,11 @@ import signal
 
 class Sandbox(userns.UserNS):
     def __init__(self, tardata, timeout=None, uid=999, gid=999,
-                 setup_fds_fn=None):
+                 setup_fds_fn=None, allow_network=False):
         self.tardata = tardata
         self.timeout = timeout
         self.setup_fds_fn = setup_fds_fn
-        super(Sandbox, self).__init__(uid, gid)
+        super(Sandbox, self).__init__(uid, gid, allow_network=allow_network)
 
     def setup_fds(self):
         if self.timeout is not None:

@@ -10,12 +10,14 @@ class Sandbox(object):
         self._tarout = io.BytesIO()
         self.tar = tarfile.open(fileobj=self._tarout, mode='w')
         self.timeout = None
+        self.allow_network = False
 
     def start(self):
         self.sock = socket.socket(socket.AF_UNIX)
         self.sock.connect(self.path)
         self.output = self.sock.makefile('r+', bufsize=0)
-        options = {'timeout': self.timeout}
+        options = {'timeout': self.timeout,
+                   'allow_network': self.allow_network}
         self.output.write(json.dumps(options) + '\n')
         self.tar.close()
         self.output.write(self._tarout.getvalue())

@@ -35,7 +35,7 @@ def errwrap(name, *args):
     return result
 
 class UserNS(object):
-    def __init__(self, uid, gid):
+    def __init__(self, uid, gid, allow_network):
         _init()
         if not (uid > 50):
             raise ValueError('uid must be > 50')
@@ -43,6 +43,7 @@ class UserNS(object):
         self._init_pid = None
         self.uid = uid
         self.gid = gid
+        self.allow_network = allow_network
 
     def run(self):
         try:
@@ -61,7 +62,8 @@ class UserNS(object):
                 self.setup_fds()
                 self._close_fds([0, 1, 2, self._pid_pipe[1]])
                 os.setsid()
-                errwrap('unshare_net')
+                if not self.allow_network:
+                    errwrap('unshare_net')
                 self._stage1()
             except:
                 traceback.print_exc()
