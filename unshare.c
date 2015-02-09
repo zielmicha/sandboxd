@@ -68,5 +68,8 @@ int dropcaps() {
         }
     }
 
+    // TODO: if(prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) == -1) return -1;
+    // But our production servers still use 3.2.0
+
     return 0;
 }
