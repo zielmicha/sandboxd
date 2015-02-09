@@ -7,11 +7,12 @@ import subprocess
 import socket
 import signal
 import traceback
-from subprocess import check_call, call
+import shutil
+from subprocess import check_call, call, check_output
 
 binds = ['/usr', '/bin', '/sbin',
          '/lib', '/lib32', '/lib32', '/lib64',
-         '/opt']
+         '/opt', '/data/source', '/etc/alternatives']
 
 _unshare = _libc = None
 
@@ -143,14 +144,26 @@ class UserNS(object):
         mount('-t', 'tmpfs', 'none', target=self.dir)
         os.chmod(self.dir, 0o755)
 
+        os.mkdir(self.dir + '/dev')
+        for name in ['tmp', 'dev/shm']:
+            os.mkdir(self.dir + '/' + name)
+            os.chown(self.dir + '/' + name, self.uid, self.gid)
+
         for bind in binds:
             if os.path.exists(bind):
                 mount('--bind', bind, target=self.dir + '/' + bind)
 
+        with open(self.dir + '/etc/passwd', 'w') as f:
+            f.write('''root:x:0:0:root:/root:/bin/zsh
+sandboxd:x:999:999::/home/user:/bin/bash
+''')
+
+        shutil.copy('/etc/resolv.conf', self.dir + '/etc/resolv.conf')
+        shutil.copy('/etc/hosts', self.dir + '/etc/hosts')
+
         mount('-t', 'proc', 'procfs', target=self.dir + '/proc')
 
         dev_null = open('/dev/null', 'w')
-        os.mkdir(self.dir + '/dev')
         for dev in ['null', 'zero', 'tty', 'urandom']:
              try:
                  check_call(['cp', '-a', '/dev/' + dev, self.dir + '/dev/' + dev], stderr=dev_null)
@@ -177,6 +190,8 @@ class UserNS(object):
         os.environ.update(dict(
             PATH='/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin',
             HOME='/home/user',
+            LANG='en_US.UTF-8',
+            LANGUAGE='en',
         ))
 
     def _close_fds(self, without):
@@ -194,8 +209,12 @@ def mount(*args, **kwargs):
     target = kwargs['target']
     cmd = ['mount'] + list(args) + [target]
     if not os.path.exists(target):
-        os.mkdir(target)
-    check_call(cmd)
+        os.makedirs(target)
+    try:
+        check_output(cmd)
+    except subprocess.CalledProcessError as err:
+        print >>sys.stderr, err.output
+        raise
 
 class error(Exception):
     pass

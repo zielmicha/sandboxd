@@ -13,7 +13,10 @@ class Sandbox(object):
         self.allow_network = False
 
     def start(self):
-        self.sock = socket.socket(socket.AF_UNIX)
+        if type(self.path) is tuple:
+            self.sock = socket.socket()
+        else:
+            self.sock = socket.socket(socket.AF_UNIX)
         self.sock.connect(self.path)
         self.output = self.sock.makefile('r+', bufsize=0)
         options = {'timeout': self.timeout,
@@ -24,7 +27,13 @@ class Sandbox(object):
         self.sock.shutdown(socket.SHUT_WR)
 
 if __name__ == '__main__':
-    box = Sandbox(sys.argv[1] if sys.argv[1:] else 'sock')
+    if len(sys.argv) == 3:
+        addr = (sys.argv[1], int(sys.argv[2]))
+    elif len(sys.argv) == 2:
+        addr = sys.argv[1]
+    else:
+        addr = 'sock'
+    box = Sandbox(addr)
     box.tar.add('example.sh', arcname='init')
     box.timeout = 3
     box.start()
