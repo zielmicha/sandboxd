@@ -6,6 +6,10 @@
 #include <signal.h>
 #include <stdio.h>
 #include <setjmp.h>
+#include <sys/prctl.h>
+#include <linux/prctl.h>
+#include <linux/capability.h>
+#include <errno.h>
 
 int unshare_mount() {
   return unshare(CLONE_NEWNS);
@@ -51,4 +55,18 @@ int unshare_ipc() {
 
 int unshare_net() {
   return unshare(CLONE_NEWNET);
+}
+
+int dropcaps() {
+    unsigned long cap;
+    int code;
+
+    for (cap=0; cap <= 63; cap++) {
+        code = prctl(PR_CAPBSET_DROP, cap, 0, 0, 0);
+        if (code == -1 && errno != EINVAL) {
+            return -1;
+        }
+    }
+
+    return 0;
 }

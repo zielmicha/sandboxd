@@ -9,6 +9,7 @@ import signal
 import traceback
 import shutil
 from subprocess import check_call, call, check_output
+import sys
 
 binds = ['/usr', '/bin', '/sbin',
          '/lib', '/lib32', '/lib32', '/lib64',
@@ -129,6 +130,8 @@ class UserNS(object):
         self._setup_fs()
         errwrap('unshare_mount')
         self._setup_env()
+
+        errwrap('dropcaps')
         os.chroot(self.dir)
         os.chdir('/')
         os.setgroups([])
