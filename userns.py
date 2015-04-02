@@ -42,6 +42,9 @@ class UserNS(object):
         if not (uid > 50):
             raise ValueError('uid must be > 50')
 
+        if os.getuid() != 0:
+            raise OSError('sandbox must run as root')
+
         self._init_pid = None
         self.uid = uid
         self.gid = gid
