@@ -1,14 +1,12 @@
 import os
 import tempfile
-import time
 import struct
-import threading
 import subprocess
-import socket
 import signal
 import traceback
 import shutil
-from subprocess import check_call, call, check_output
+import errno
+from subprocess import check_call, check_output
 import sys
 
 binds = ['/usr', '/bin', '/sbin',
@@ -76,7 +74,13 @@ class UserNS(object):
                 os._exit(0)
         else:
             self._read_pid()
-            os.wait()
+            try:
+                os.wait()
+            except OSError as err:
+                if err.errno == errno.ECHILD:
+                    pass
+                else:
+                    raise
 
     def setup_fds(self):
         pass
