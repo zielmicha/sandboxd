@@ -161,7 +161,7 @@ class UserNS(object):
 
         for bind in binds:
             if os.path.exists(bind):
-                mount('--bind', bind, target=self.dir + '/' + bind)
+                mount('--rbind', bind, target=self.dir + '/' + bind)
 
         with open(self.dir + '/etc/passwd', 'w') as f:
             f.write('''root:x:0:0:root:/root:/bin/zsh
