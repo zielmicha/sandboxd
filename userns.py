@@ -91,6 +91,7 @@ class UserNS(object):
 
     def _read_pid(self):
         self._init_pid, = struct.unpack('!I', os.read(self._pid_pipe[0], 4))
+        os.close(self._pid_pipe[0])
 
     def _write_pid(self, pid):
         self._init_pid = pid
